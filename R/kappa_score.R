@@ -52,7 +52,7 @@ categ_dist = function(mapping_table, terms_to_compare = unlist(unique(mapping_ta
   mapping_table = copy(unique(mapping_table))
   print(mapping_table)
   colnames(mapping_table) = c("UNIPROT", "GO")
-  z1 = cbind(copy(mapping_table[,.(UNIPROT, GO)]), value = 1)
+  z1 = cbind(copy(mapping_table[,c("UNIPROT", "GO"), with = F]), value = 1)
   z2 = dcast(z1, UNIPROT ~ GO, fill = 0, drop = F)
   z2 = z2[,UNIPROT := NULL]
   z2 = z2[,terms_to_compare, with=F]
