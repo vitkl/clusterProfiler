@@ -99,7 +99,7 @@ simplify_internal <- function(res = x@result, cutoff=0.7, by="p.adjust", select_
     # find GO term to protein mapping
     semData <- get_GO_data(OrgDb = 'org.Hs.eg.db', ont = ontology, keytype = keytype)
     # measure distance between selected terms (important to get all GO to protein mappings)
-    semData = data.table(names(unlist(semData$EXTID2PATHID)),unlist(semData$EXTID2PATHID))
+    semData = data.table(x = names(unlist(semData$EXTID2PATHID)), y = unlist(semData$EXTID2PATHID))
     colnames(semData) = c(keytype,"GO")
     semData = unique(semData)
     sim = categ_dist(mapping_table = semData, terms_to_compare = res$ID)$similarity_matrix
