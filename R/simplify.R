@@ -22,7 +22,7 @@
 ##' @aliases simplify,enrichResult-method
 ##' @author Guangchuang Yu, edits by Vitalii Kleshchevnikov
 setMethod("simplify", signature(x="enrichResult"),
-          function(x, cutoff=0.7, by="p.adjust", select_fun=min, measure="Wang", semData = NULL, use_data_table = ifelse(measure == "kappa", T, F), use_bioc_annotationdbi = T) {
+          function(x, cutoff=0.7, by="p.adjust", select_fun=min, measure="Wang", semData = NULL, use_data_table = F, use_bioc_annotationdbi = T) {
             if (!x@ontology %in% c("BP", "MF", "CC"))
               stop("simplify only applied to output from enrichGO...")
             
@@ -56,7 +56,7 @@ setMethod("simplify", signature(x="enrichResult"),
 ##' @aliases simplify,gseaResult-method
 ##' @author Guangchuang Yu, adopted for gseaResult by Vitalii Kleshchevnikov
 setMethod("simplify", signature(x="gseaResult"),
-          function(x, cutoff=0.7, by="p.adjust", select_fun=min, measure="Wang", semData = NULL, use_data_table = ifelse(measure == "kappa", T, F), use_bioc_annotationdbi = T) {
+          function(x, cutoff=0.7, by="p.adjust", select_fun=min, measure="Wang", semData = NULL, use_data_table = if(measure == "kappa"), use_bioc_annotationdbi = T) {
             if (!x@setType %in% c("BP", "MF", "CC"))
               stop("simplify only applied to output from enrichGO...")
             
@@ -184,7 +184,7 @@ simplify_internal <- function(res = x@result, cutoff=0.7, by="p.adjust", select_
 ##' @aliases simplify,compareClusterResult-method
 ##' @author Guangchuang Yu
 setMethod("simplify", signature(x="compareClusterResult"),
-          function(x, cutoff=0.7, by="p.adjust", select_fun=min, measure="Wang", semData=NULL, use_data_table = ifelse(measure == "kappa", T, F), use_bioc_annotationdbi = T) {
+          function(x, cutoff=0.7, by="p.adjust", select_fun=min, measure="Wang", semData=NULL, use_data_table = F, use_bioc_annotationdbi = T) {
               res <- x@compareClusterResult
               ont <- get_go_ontology(x)
 
