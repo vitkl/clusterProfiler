@@ -51,7 +51,10 @@ categ_dist = function(mapping_table, terms_to_compare = unlist(unique(mapping_ta
   mapping_table = copy(unique(mapping_table))
   print(mapping_table)
   colnames(mapping_table) = c("UNIPROT", "GO")
-  z2 = dcast(mapping_table[,.(UNIPROT, GO, value = 1)], UNIPROT ~ GO, fill = 0, drop = F)[,UNIPROT := NULL][,terms_to_compare, with=F]
+  z1 = copy(mapping_table[,.(UNIPROT, GO, value = 1)])
+  z2 = dcast(z1, UNIPROT ~ GO, fill = 0, drop = F)
+  z2 = z2[,UNIPROT := NULL]
+  z2 = z2[,terms_to_compare, with=F]
   combinations = t(combs(colnames(z2),2))
   dist = t(sapply(as.data.table(combinations), function(x) kappa_score(z2[,c(x[1],x[2]),with = F])))
   dist = cbind(as.data.table(dist), as.data.table(t(combinations)))
