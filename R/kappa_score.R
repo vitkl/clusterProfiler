@@ -47,6 +47,7 @@ categ_dist = function(mapping_table, terms_to_compare = unlist(unique(mapping_ta
   if(ncol(mapping_table) > 2) stop("table has more than 2 columns, object id column and term column")
   if(ignore_limit == F) if(length(terms_to_compare) > 1000) stop("more than 1000 terms to compare, set ignore_limit = T if you are sure to proceed")
   if(!is.data.table(mapping_table)) stop("provided mapping / annotation table may not be in the right format (wrong class: not data.table)")
+  #require(data.table)
   
   mapping_table = copy(unique(mapping_table))
   print(mapping_table)
