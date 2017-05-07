@@ -32,7 +32,10 @@ Imports:
     stats,
     stats4,
     tidyr,
-    utils
+    utils,
+    data.table,
+    caTools,
+    vcd
 Suggests:
     AnnotationHub,
     GSEABase,

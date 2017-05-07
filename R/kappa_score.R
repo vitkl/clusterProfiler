@@ -18,6 +18,9 @@
 ##' @export
 ##' @author Vitalii Kleshchevnikov
 kappa_score = function(value){
+  if(!is.data.table(value)) stop("kappa_score: provided table may not be in the right format (wrong class: not data.table)")
+  if(ncol(mapping_table) > 2) stop("kappa_score: table has more than 2 category columns")
+      
   colnames(value) = c("x","y")
   table_ = value[,.N, by = .(x,y)]
   table_2 = matrix(,2,2)
@@ -25,7 +28,7 @@ kappa_score = function(value){
   table_2[1,2] = ifelse(length(table_[x == 1 & y == 0, N]), table_[x == 1 & y == 0, N],0)
   table_2[2,1] = ifelse(length(table_[x == 0 & y == 1, N]), table_[x == 0 & y == 1, N],0)
   table_2[2,2] = ifelse(length(table_[x == 0 & y == 0, N]), table_[x == 0 & y == 0, N],0)
-  kappa_score = vcd::Kappa(table_2,weights = "Fleiss-Cohen")$Unweighted
+  kappa_score = Kappa(table_2,weights = "Fleiss-Cohen")$Unweighted
   return(kappa_score)
 }
 
@@ -44,18 +47,14 @@ kappa_score = function(value){
 ##' @export
 ##' @author Vitalii Kleshchevnikov
 categ_dist = function(mapping_table, terms_to_compare = unlist(unique(mapping_table[,2,with = F])), ignore_limit = F){
-  if(ncol(mapping_table) > 2) stop("table has more than 2 columns, object id column and term column")
-  if(ignore_limit == F) if(length(terms_to_compare) > 1000) stop("more than 1000 terms to compare, set ignore_limit = T if you are sure to proceed")
-  if(!is.data.table(mapping_table)) stop("provided mapping / annotation table may not be in the right format (wrong class: not data.table)")
-  #require(data.table)
+  if(ncol(mapping_table) > 2) stop("categ_dist: table has more than 2 columns, object id column and term column")
+  if(ignore_limit == F) if(length(terms_to_compare) > 1000) stop("categ_dist: more than 1000 terms to compare, set ignore_limit = T if you are sure to proceed")
+  if(!is.data.table(mapping_table)) stop("categ_dist: provided mapping / annotation table may not be in the right format (wrong class: not data.table)")
   
   mapping_table = copy(unique(mapping_table))
   print(mapping_table)
   colnames(mapping_table) = c("UNIPROT", "GO")
-  z1 = cbind(copy(mapping_table[,c("UNIPROT", "GO"), with = F]), value = 1)
-  z2 = dcast(z1, UNIPROT ~ GO, fill = 0, drop = F)
-  z2 = z2[,UNIPROT := NULL]
-  z2 = z2[,terms_to_compare, with=F]
+  z2 = dcast(mapping_table[,.(UNIPROT, GO, value = 1)], UNIPROT ~ GO, fill = 0, drop = F)[,UNIPROT := NULL][,terms_to_compare, with=F]
   combinations = t(combs(colnames(z2),2))
   dist = t(sapply(as.data.table(combinations), function(x) kappa_score(z2[,c(x[1],x[2]),with = F])))
   dist = cbind(as.data.table(dist), as.data.table(t(combinations)))

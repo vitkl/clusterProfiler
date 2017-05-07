@@ -71,7 +71,7 @@ setMethod("simplify", signature(x="gseaResult"),
 ##' @importFrom GOSemSim mgoSim
 ##' @importFrom GOSemSim godata
 ##' @importFrom tidyr gather
-##' @importFrom 
+##' @import data.table
 ##' @author Guangchuang Yu, kappa similarity method added by Vitalii Kleshchevnikov
 simplify_internal <- function(res = x@result, cutoff=0.7, by="p.adjust", select_fun=min, measure="Rel", ontology = x@ontology, semData, use_data_table, use_bioc_annotationdbi, keytype = x@keytype) {
   if (missing(semData) || is.null(semData)) {
@@ -95,7 +95,6 @@ simplify_internal <- function(res = x@result, cutoff=0.7, by="p.adjust", select_
   }
   
   if(measure == "kappa"){
-    require(data.table)
     # find GO term to protein mapping
     semData <- get_GO_data(OrgDb = 'org.Hs.eg.db', ont = ontology, keytype = keytype)
     # measure distance between selected terms (important to get all GO to protein mappings)
