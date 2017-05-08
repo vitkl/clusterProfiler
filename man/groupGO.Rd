@@ -39,11 +39,10 @@ a specific level.
 	#plot(yy)
 
 }
-\author{
-Guangchuang Yu \url{http://ygc.name}
-}
 \seealso{
 \code{\link{groupGOResult-class}}, \code{\link{compareCluster}}
 }
+\author{
+Guangchuang Yu \url{http://ygc.name}
+}
 \keyword{manip}
-

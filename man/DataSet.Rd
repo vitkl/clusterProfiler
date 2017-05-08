@@ -4,6 +4,7 @@
 \name{DataSet}
 \alias{DataSet}
 \alias{gcSample}
+\alias{DataSet}
 \alias{kegg_species}
 \title{Datasets
 gcSample contains a sample of gene clusters.}
@@ -15,4 +16,3 @@ Datasets
 kegg_species contains kegg species information
 }
 \keyword{datasets}
-
