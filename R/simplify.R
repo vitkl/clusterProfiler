@@ -136,7 +136,6 @@ simplify_internal <- function(res = x@result, cutoff=0.7, by="p.adjust", select_
   }
   
   if(use_data_table == T){
-    require(data.table)
     sim.df <- as.data.table(sim, keep.rownames = "go1")
     sim.df <- melt(sim.df,id.vars = "go1",variable.name = "go2",
                    value.name = "similarity", variable.factor =F) 
@@ -161,7 +160,7 @@ simplify_internal <- function(res = x@result, cutoff=0.7, by="p.adjust", select_
       jj <- which(sim_subset[, by, with =F] == select_fun(sim_subset[, by, with =F]))
       
       ## sim.df <- sim.df[-ii[-jj]]
-      GO_to_remove <- c(GO_to_remove, sim_subset$go1[-jj]) %>% unique
+      GO_to_remove <- unique(c(GO_to_remove, sim_subset$go1[-jj]))
     }
   }
   

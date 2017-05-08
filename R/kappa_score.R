@@ -7,6 +7,7 @@
 ##' 
 ##' @description the function is faster than irr::kappa2(ratings = value, weight = "unweighted")
 ##' @description the function is ~25 times slower than dist()
+##' @description for full gene to GO mapping table (when parent term inherits all annotations of children terms) blows up the memory (over 50GB)
 ##'
 ##' @param value a data.table with 2 columns (two categories) and many rows (objects)
 ##' @importFrom vcd Kappa
@@ -50,10 +51,12 @@ categ_dist = function(mapping_table, terms_to_compare = unlist(unique(mapping_ta
   if(!is.data.table(mapping_table)) stop("categ_dist: provided mapping / annotation table may not be in the right format (wrong class: not data.table)")
   
   mapping_table = copy(unique(mapping_table))
-  print(mapping_table)
+  #print(mapping_table)
   colnames(mapping_table) = c("UNIPROT", "GO")
   z2 = dcast(mapping_table[,.(UNIPROT, GO, value = 1)], UNIPROT ~ GO, fill = 0, drop = F)[,UNIPROT := NULL][,terms_to_compare, with=F]
+  #print(str(z2))
   combinations = t(combs(colnames(z2),2))
+  #print(as.data.table(combinations))
   dist = t(sapply(as.data.table(combinations), function(x) kappa_score(z2[,c(x[1],x[2]),with = F])))
   dist = cbind(as.data.table(dist), as.data.table(t(combinations)))
   colnames(dist) = c("kappa_score", "kappa_error", "GO1", "GO2")
