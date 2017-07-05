@@ -1,13 +1,13 @@
 ##' similarity between categories - kappa score
 ##' 
-##' @description Function will calculate kappa score between two categories describing a set of elements (GO terms, KEGG pathways, genes).
-##' @description Function takes a data.table with 2 columns describing to two categories to which each element in rows can belong to. Os and 1s in the table signify membership.
-##' @description the function is defined as described in this article: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2375021/figure/F2/
-##' @description relies on data.table for subsetting and vcd package for calculating kappa score given 2x2 incidence matrix
+##' @description \code{kappa_score} calculates kappa similarity score between two categories based on the overlap of the set of elements they describe adjusted for that overlap being produced by chance. 
+##' @details Categories can be anything, common example is GO terms (describe gene products, \url{http://geneontology.org/}), KEGG pathways (describe genes, \url{http://www.genome.jp/kegg/pathway.html}), genes (similarity based on annotation with GO terms).
+##' @details \code{kappa_score} takes a data.table with 2 columns describing to two categories to which each element in rows can belong to. Os and 1s in the table signify membership.
+##' @details \code{kappa_score} is defined as described in this article: \url{https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2375021/figure/F2/}
+##' @details relies on data.table for subsetting and vcd package for calculating kappa score given 2x2 incidence matrix
 ##' 
-##' @description the function is faster than irr::kappa2(ratings = value, weight = "unweighted")
-##' @description the function is ~25 times slower than dist()
-##' @description for full gene to GO mapping table (when parent term inherits all annotations of children terms) blows up the memory (over 50GB)
+##' @details \code{kappa_score} is faster than irr::kappa2(ratings = value, weight = "unweighted")
+##' @details \code{kappa_score} is ~25 times slower than dist()
 ##'
 ##' @param value a data.table with 2 columns (two categories) and many rows (objects)
 ##' @importFrom vcd Kappa
@@ -35,19 +35,28 @@ kappa_score = function(value){
     return(kappa_score)
 }
 
-##' calculate categorical distance (Cohen's Kappa score) between multiple categories
+##' categorical distance (Cohen's Kappa score) between multiple categories
 ##' 
-##' @description The categ_dist function to calculate categorical distance (Cohen's Kappa score) between multiple terms (categories).
-##' @description The function is intended to measure distances between GO terms based on proteins they annotate.
-##' @description More generally, the function can be used to measure categorical distances between any terms(categories) annotating objects.
-##' @description Objects should be provided as a first column of a data.table, terms (categories) should be provided as a second column.
+##' @description The \code{categ_dist} function calculates categorical distance (Cohen's Kappa score) between multiple categories (terms).
+##' @details \code{categ_dist} is intended to measure distances between GO terms based on proteins they annotate.
+##' @details More generally, \code{categ_dist} can be used to measure categorical distances between any terms(categories) annotating objects.
+##' @details Objects should be provided as a first column of a data.table, terms (categories) should be provided as a second column.
 ##' 
-##' @description Important: for correct evalutation mapping_table should inlude all term-to-gene associations, terms_to_compare should specify which you want to compare
+##' @details Important: for correct evalutation of GO term similarity mapping_table should inlude all term-to-gene associations (expanded so that parent term inherits all annotations of children terms), terms_to_compare should specify which you want to compare
+##' @details For full gene to GO mapping table (expanded so that parent term inherits all annotations of children terms) blows up the memory (over 50GB)
 ##' @param mapping_table two-column data.table which provides mapping from object to term 
 ##' @param terms_to_compare a character vector specifying which terms to compare
 ##' @param ignore_limit logical, ignore the limit set on the number of terms to compare (1000)
+##' @param parallel logical, if TRUE use parSapply (from the parallel package) to speed up calculations on multiple cores
 ##' @import data.table
 ##' @importFrom caTools combs
+##' @importFrom parallel detectCores
+##' @importFrom parallel makeCluster
+##' @importFrom parallel clusterEvalQ
+##' @importFrom parallel parSapply
+##' @importFrom parallel stopCluster
+##' @seealso \code{\link{kappa_score}}
+##' @seealso \code{\link{parSapply}}
 ##' @export
 ##' @author Vitalii Kleshchevnikov
 categ_dist = function(mapping_table, terms_to_compare = unlist(unique(mapping_table[,2,with = F])), ignore_limit = F, parallel = T){

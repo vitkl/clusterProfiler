@@ -10,19 +10,20 @@ kappa_score(value)
 \item{value}{a data.table with 2 columns (two categories) and many rows (objects)}
 }
 \description{
-Function will calculate kappa score between two categories describing a set of elements (GO terms, KEGG pathways, genes).
+\code{kappa_score} calculates kappa similarity score between two categories based on the overlap of the set of elements they describe adjusted for that overlap being produced by chance.
+}
+\details{
+Categories can be anything, common example is GO terms (describe gene products, \url{http://geneontology.org/}), KEGG pathways (describe genes, \url{http://www.genome.jp/kegg/pathway.html}), genes (similarity based on annotation with GO terms).
 
-Function takes a data.table with 2 columns describing to two categories to which each element in rows can belong to. Os and 1s in the table signify membership.
+\code{kappa_score} takes a data.table with 2 columns describing to two categories to which each element in rows can belong to. Os and 1s in the table signify membership.
 
-the function is defined as described in this article: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2375021/figure/F2/
+\code{kappa_score} is defined as described in this article: \url{https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2375021/figure/F2/}
 
 relies on data.table for subsetting and vcd package for calculating kappa score given 2x2 incidence matrix
 
-the function is faster than irr::kappa2(ratings = value, weight = "unweighted")
+\code{kappa_score} is faster than irr::kappa2(ratings = value, weight = "unweighted")
 
-the function is ~25 times slower than dist()
-
-for full gene to GO mapping table (when parent term inherits all annotations of children terms) blows up the memory (over 50GB)
+\code{kappa_score} is ~25 times slower than dist()
 }
 \seealso{
 \code{\link{categ_dist}}

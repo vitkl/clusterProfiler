@@ -2,7 +2,7 @@
 % Please edit documentation in R/kappa_score.R
 \name{categ_dist}
 \alias{categ_dist}
-\title{calculate categorical distance (Cohen's Kappa score) between multiple categories}
+\title{categorical distance (Cohen's Kappa score) between multiple categories}
 \usage{
 categ_dist(mapping_table, terms_to_compare = unlist(unique(mapping_table[, 2,
   with = F])), ignore_limit = F, parallel = T)
@@ -13,17 +13,27 @@ categ_dist(mapping_table, terms_to_compare = unlist(unique(mapping_table[, 2,
 \item{terms_to_compare}{a character vector specifying which terms to compare}
 
 \item{ignore_limit}{logical, ignore the limit set on the number of terms to compare (1000)}
+
+\item{parallel}{logical, if TRUE use parSapply (from the parallel package) to speed up calculations on multiple cores}
 }
 \description{
-The categ_dist function to calculate categorical distance (Cohen's Kappa score) between multiple terms (categories).
+The \code{categ_dist} function calculates categorical distance (Cohen's Kappa score) between multiple categories (terms).
+}
+\details{
+\code{categ_dist} is intended to measure distances between GO terms based on proteins they annotate.
 
-The function is intended to measure distances between GO terms based on proteins they annotate.
-
-More generally, the function can be used to measure categorical distances between any terms(categories) annotating objects.
+More generally, \code{categ_dist} can be used to measure categorical distances between any terms(categories) annotating objects.
 
 Objects should be provided as a first column of a data.table, terms (categories) should be provided as a second column.
 
-Important: for correct evalutation mapping_table should inlude all term-to-gene associations, terms_to_compare should specify which you want to compare
+Important: for correct evalutation of GO term similarity mapping_table should inlude all term-to-gene associations (expanded so that parent term inherits all annotations of children terms), terms_to_compare should specify which you want to compare
+
+For full gene to GO mapping table (expanded so that parent term inherits all annotations of children terms) blows up the memory (over 50GB)
+}
+\seealso{
+\code{\link{kappa_score}}
+
+\code{\link{parSapply}}
 }
 \author{
 Vitalii Kleshchevnikov
