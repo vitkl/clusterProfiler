@@ -16,18 +16,23 @@
 ##' @export
 ##' @author Vitalii Kleshchevnikov
 kappa_score = function(value){
-  if(!is.data.table(value)) stop("kappa_score: provided table may not be in the right format (wrong class: not data.table)")
-  if(ncol(value) > 2) stop("kappa_score: table has more than 2 category columns")
-      
-  colnames(value) = c("x","y")
-  table_ = value[,.N, by = .(x,y)]
-  table_2 = matrix(,2,2)
-  table_2[1,1] = ifelse(length(table_[x == 1 & y == 1, N]), table_[x == 1 & y == 1, N],0)
-  table_2[1,2] = ifelse(length(table_[x == 1 & y == 0, N]), table_[x == 1 & y == 0, N],0)
-  table_2[2,1] = ifelse(length(table_[x == 0 & y == 1, N]), table_[x == 0 & y == 1, N],0)
-  table_2[2,2] = ifelse(length(table_[x == 0 & y == 0, N]), table_[x == 0 & y == 0, N],0)
-  kappa_score = Kappa(table_2,weights = "Fleiss-Cohen")$Unweighted
-  return(kappa_score)
+    if(!is.data.table(value)) stop("kappa_score: provided table may not be in the right format (wrong class: not data.table)")
+    if(ncol(value) > 2) stop("kappa_score: table has more than 2 category columns")
+    
+    colnames(value) = c("x","y")
+    table_ = value[,.N, by = .(x,y)]
+    table_2 = matrix(,2,2)
+    # calculate the number of cases when the item belongs to both categories
+    table_2[1,1] = ifelse(length(table_[x == 1 & y == 1, N]), table_[x == 1 & y == 1, N],0)
+    # calculate the number of cases when the item belongs to x but not y
+    table_2[1,2] = ifelse(length(table_[x == 1 & y == 0, N]), table_[x == 1 & y == 0, N],0)
+    # calculate the number of cases when the item belongs to y but not x
+    table_2[2,1] = ifelse(length(table_[x == 0 & y == 1, N]), table_[x == 0 & y == 1, N],0)
+    # calculate the number of cases when the item belongs to neither x nor y
+    table_2[2,2] = ifelse(length(table_[x == 0 & y == 0, N]), table_[x == 0 & y == 0, N],0)
+    # calculate kappa score using Kappa function from vcd package
+    kappa_score = Kappa(table_2,weights = "Fleiss-Cohen")$Unweighted
+    return(kappa_score)
 }
 
 ##' calculate categorical distance (Cohen's Kappa score) between multiple categories
@@ -45,28 +50,53 @@ kappa_score = function(value){
 ##' @importFrom caTools combs
 ##' @export
 ##' @author Vitalii Kleshchevnikov
-categ_dist = function(mapping_table, terms_to_compare = unlist(unique(mapping_table[,2,with = F])), ignore_limit = F){
-  if(ncol(mapping_table) > 2) stop("categ_dist: table has more than 2 columns, object id column and term column")
-  if(ignore_limit == F) if(length(terms_to_compare) > 1000) stop("categ_dist: more than 1000 terms to compare, set ignore_limit = T if you are sure to proceed")
-  if(!is.data.table(mapping_table)) stop("categ_dist: provided mapping / annotation table may not be in the right format (wrong class: not data.table)")
-  
-  mapping_table = copy(unique(mapping_table))
-  #print(mapping_table)
-  colnames(mapping_table) = c("UNIPROT", "GO")
-  z2 = dcast(mapping_table[,.(UNIPROT, GO, value = 1)], UNIPROT ~ GO, fill = 0, drop = F)[,UNIPROT := NULL][,terms_to_compare, with=F]
-  #print(str(z2))
-  combinations = t(combs(colnames(z2),2))
-  #print(as.data.table(combinations))
-  dist = t(sapply(as.data.table(combinations), function(x) kappa_score(z2[,c(x[1],x[2]),with = F])))
-  dist = cbind(as.data.table(dist), as.data.table(t(combinations)))
-  colnames(dist) = c("kappa_score", "kappa_error", "GO1", "GO2")
-  dist_temp = unique(rbind(dist,dist[,.(kappa_score,kappa_error, GO1 = GO2, GO2 = GO1)]))
-  
-  dist2 = as.matrix(dcast(dist_temp[,.(GO1,GO2, kappa_score)], GO1 ~ GO2))
-  rownames_dist2 = dist2[,"GO1"]
-  dist2 = as.matrix(dcast(dist_temp[,.(GO1,GO2, kappa_score)], GO1 ~ GO2)[,GO1 := NULL])
-  rownames(dist2) = rownames_dist2
-  dist2 = dist2[sort(rownames(dist2)), sort(colnames(dist2))]
-  diag(dist2) = 1
-  return(list(similarity_matrix = dist2, kappa_score_table = dist, kappa_score_table_redundant = dist_temp))
+categ_dist = function(mapping_table, terms_to_compare = unlist(unique(mapping_table[,2,with = F])), ignore_limit = F, parallel = T){
+    if(ncol(mapping_table) > 2) stop("categ_dist: table has more than 2 columns, object id column and term column")
+    if(ignore_limit == F) if(length(terms_to_compare) > 1000) stop("categ_dist: more than 1000 terms to compare, set ignore_limit = T if you are sure to proceed")
+    if(!is.data.table(mapping_table)) stop("categ_dist: provided mapping / annotation table may not be in the right format (wrong class: not data.table)")
+    
+    # copy original data to avoid allowing data.table to modify original data
+    mapping_table = copy(unique(mapping_table))
+    # sanity check: print(mapping_table)
+    # assign standard column names
+    colnames(mapping_table) = c("UNIPROT", "GO")
+    # covert two column table into N UNIPROT by N GO table containing 1 when UNIPROT-1 is in group GO-1
+    z2 = dcast(mapping_table[,.(UNIPROT, GO, value = 1)], UNIPROT ~ GO, fill = 0, drop = F)[,UNIPROT := NULL][,terms_to_compare, with=F]
+    # sanity check: print(str(z2))
+    # calculate what are the unique comparisons of columns
+    combinations = t(combs(colnames(z2),2))
+    # sanity check: print(as.data.table(combinations))
+    if(parallel == T){
+        # create cluster
+        cl <- makeCluster(detectCores()-1)  
+        # get library support needed to run the code
+        clusterEvalQ(cl,library(data.table))
+        # put objects in place that might be needed for the code
+        # clusterExport(cl,c("combinations", "z2"))
+        # parSapply
+        dist = t(parSapply(cl = cl,as.data.table(combinations), function(x) kappa_score(z2[,c(x[1],x[2]),with = F])))
+        # attach labels to distance calculations
+        dist = cbind(as.data.table(dist), as.data.table(t(combinations)))
+        #stop the cluster
+        stopCluster(cl)
+    }
+    if(parallel == F){
+        dist = t(sapply(as.data.table(combinations), function(x) kappa_score(z2[,c(x[1],x[2]),with = F])))
+        dist = cbind(as.data.table(dist), as.data.table(t(combinations)))
+    }
+    colnames(dist) = c("kappa_score", "kappa_error", "GO1", "GO2")
+    
+    # convert the table to similarity matrix
+    # generate the table with reverse comparisons (redundant) to make converting to avoid NAs in the symmetric similarity matrix
+    dist_temp = unique(rbind(dist,dist[,.(kappa_score,kappa_error, GO1 = GO2, GO2 = GO1)]))
+    # transform to matrix to find rownames
+    dist2 = as.matrix(dcast(dist_temp[,.(GO1,GO2, kappa_score)], GO1 ~ GO2))
+    rownames_dist2 = dist2[,"GO1"]
+    # transform to matrix to get resulting similarity matrix and name the row correctly
+    dist2 = as.matrix(dcast(dist_temp[,.(GO1,GO2, kappa_score)], GO1 ~ GO2)[,GO1 := NULL])
+    rownames(dist2) = rownames_dist2
+    # sort by row names and by column names
+    dist2 = dist2[sort(rownames(dist2)), sort(colnames(dist2))]
+    diag(dist2) = 1
+    return(list(similarity_matrix = dist2, kappa_score_table = dist, kappa_score_table_redundant = dist_temp))
 }

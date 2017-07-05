@@ -21,6 +21,8 @@ relies on data.table for subsetting and vcd package for calculating kappa score 
 the function is faster than irr::kappa2(ratings = value, weight = "unweighted")
 
 the function is ~25 times slower than dist()
+
+for full gene to GO mapping table (when parent term inherits all annotations of children terms) blows up the memory (over 50GB)
 }
 \seealso{
 \code{\link{categ_dist}}

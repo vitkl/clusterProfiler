@@ -5,7 +5,7 @@
 \title{calculate categorical distance (Cohen's Kappa score) between multiple categories}
 \usage{
 categ_dist(mapping_table, terms_to_compare = unlist(unique(mapping_table[, 2,
-  with = F])), ignore_limit = F)
+  with = F])), ignore_limit = F, parallel = T)
 }
 \arguments{
 \item{mapping_table}{two-column data.table which provides mapping from object to term}
