@@ -44,10 +44,12 @@ kappa_score = function(value){
 ##' 
 ##' @details Important: for correct evalutation of GO term similarity mapping_table should inlude all term-to-gene associations (expanded so that parent term inherits all annotations of children terms), terms_to_compare should specify which you want to compare
 ##' @details For full gene to GO mapping table (expanded so that parent term inherits all annotations of children terms) blows up the memory (over 50GB)
+##' @details By default cores_to_use: the number of cores on the machine -1, however, for cluster job you may need to specify the number cores otherwise R reads how many cores the node has, not how many cores the job is allowed to use/requested
 ##' @param mapping_table two-column data.table which provides mapping from object to term 
 ##' @param terms_to_compare a character vector specifying which terms to compare
 ##' @param ignore_limit logical, ignore the limit set on the number of terms to compare (1000)
 ##' @param parallel logical, if TRUE use parSapply (from the parallel package) to speed up calculations on multiple cores
+##' @param cores_to_use specify how many cores to use 
 ##' @import data.table
 ##' @importFrom caTools combs
 ##' @importFrom parallel detectCores
@@ -59,7 +61,7 @@ kappa_score = function(value){
 ##' @seealso \code{\link{parSapply}}
 ##' @export
 ##' @author Vitalii Kleshchevnikov
-categ_dist = function(mapping_table, terms_to_compare = unlist(unique(mapping_table[,2,with = F])), ignore_limit = F, parallel = T){
+categ_dist = function(mapping_table, terms_to_compare = unlist(unique(mapping_table[,2,with = F])), ignore_limit = F, parallel = T, cores_to_use = parallel::detectCores()-1){
     if(ncol(mapping_table) > 2) stop("categ_dist: table has more than 2 columns, object id column and term column")
     if(ignore_limit == F) if(length(terms_to_compare) > 1000) stop("categ_dist: more than 1000 terms to compare, set ignore_limit = T if you are sure to proceed")
     if(!is.data.table(mapping_table)) stop("categ_dist: provided mapping / annotation table may not be in the right format (wrong class: not data.table)")

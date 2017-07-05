@@ -5,7 +5,8 @@
 \title{categorical distance (Cohen's Kappa score) between multiple categories}
 \usage{
 categ_dist(mapping_table, terms_to_compare = unlist(unique(mapping_table[, 2,
-  with = F])), ignore_limit = F, parallel = T)
+  with = F])), ignore_limit = F, parallel = T,
+  cores_to_use = parallel::detectCores() - 1)
 }
 \arguments{
 \item{mapping_table}{two-column data.table which provides mapping from object to term}
@@ -15,6 +16,8 @@ categ_dist(mapping_table, terms_to_compare = unlist(unique(mapping_table[, 2,
 \item{ignore_limit}{logical, ignore the limit set on the number of terms to compare (1000)}
 
 \item{parallel}{logical, if TRUE use parSapply (from the parallel package) to speed up calculations on multiple cores}
+
+\item{cores_to_use}{specify how many cores to use}
 }
 \description{
 The \code{categ_dist} function calculates categorical distance (Cohen's Kappa score) between multiple categories (terms).
@@ -29,6 +32,8 @@ Objects should be provided as a first column of a data.table, terms (categories)
 Important: for correct evalutation of GO term similarity mapping_table should inlude all term-to-gene associations (expanded so that parent term inherits all annotations of children terms), terms_to_compare should specify which you want to compare
 
 For full gene to GO mapping table (expanded so that parent term inherits all annotations of children terms) blows up the memory (over 50GB)
+
+By default cores_to_use: the number of cores on the machine -1, however, for cluster job you may need to specify the number cores otherwise R reads how many cores the node has, not how many cores the job is allowed to use/requested
 }
 \seealso{
 \code{\link{kappa_score}}
